@@ -13,6 +13,7 @@ import "C"
 import (
 	"errors"
 	"unsafe"
+	"syscall"
 )
 
 const (
@@ -36,6 +37,20 @@ type Errno int
 
 func (e Errno) Error() string {
 	return C.GoString(C.mdb_strerror(C.int(e)))
+}
+
+func (e Errno) Errno() syscall.Errno {
+	return syscall.Errno(uint(e))
+}
+
+func IsErrno(err error, errno syscall.Errno) bool {
+	if _errno, ok := err.(Errno); ok {
+		return syscall.Errno(_errno) == errno
+	}
+	if _errno, ok := err.(syscall.Errno); ok {
+		return _errno == errno
+	}
+	return false
 }
 
 // error codes
